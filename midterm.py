@@ -1,10 +1,10 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
-from models import db, bcrypt, Users
+from models import db, bcrypt, Users , LotteryType , LotteryEntry
 from werkzeug.security import check_password_hash
 import os
 from selenium import webdriver
 from forms import RegistrationForm, LoginForm, LotteryChoiceForm
-from data_scraper import login_to_instagram, collect_comments, collect_likes, collect_followers
+from data_scraper import login, collect_comments, collect_likes, collect_followers , calculate_scores
 from payment import process_payment
 
 
@@ -51,20 +51,25 @@ def login():
         user = Users.query.filter_by(email=form.email.data).first()
         if user and check_password_hash(user.password, form.password.data):
             flash('ورود موفقیت‌آمیز بود!', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('choose_lottery'))
         else:
             flash('ورود ناموفق. لطفاً ایمیل و پسورد را بررسی کنید', 'danger')
     return render_template('login.html', form=form)
 
-@app.route("/dashboard")
-def dashboard():
-    return "به داشبورد خوش آمدید!"
 
 @app.route('/choose_lottery', methods=['GET', 'POST'])
 def choose_lottery():
     form = LotteryChoiceForm()
     if form.validate_on_submit():
         chosen_type = form.lottery_type.data
+        lotterytype = LotteryType(chosen_type)
+        try:
+            db.session.add(lotterytype)
+            db.session.commit()
+        
+        except Exception as e:
+            db.session.rollback()
+            flash('خطایی در انتخاب نوع قرعه کشی رخ داد.', 'danger')
         flash(f'شما {chosen_type} را انتخاب کرده‌اید.', 'success')
         return redirect(url_for('lottery'))
     return render_template('choose_lottery.html', form=form)
@@ -78,20 +83,13 @@ def lottery():
 
         driver = webdriver.Chrome(executable_path='C:\\Users\\Almas\\Desktop\\chromedriver-win64\\chromedriver.exe')
     
-        try:
-            driver = login_to_instagram()
-            comments = collect_comments(driver, post_url)
-            likes = collect_likes(driver, post_url)
-            followers = collect_followers(driver, post_url)
+        driver = login()
+        
+        comments = collect_comments(driver, post_url)
+        likes = collect_likes(driver, post_url)
+        followers = collect_followers(driver, post_url)
+        score = calculate_scores(driver,post_url)
 
-            if len(likes) >= 100:
-                payment_url = process_payment(10000, url_for('dashboard'))
-                return redirect(payment_url)
-            else:
-                flash("تنظیم قرعه‌کشی کامل شد", "success")
-                return redirect(url_for('dashboard'))
-        finally:
-            driver.quit()
 
     return render_template('lottery.html')
 
