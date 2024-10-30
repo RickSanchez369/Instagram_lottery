@@ -1,111 +1,91 @@
+import os
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-import re
 
 
+username = os.getenv("INSTAGRAM_USERNAME")  
+password = os.getenv("INSTAGRAM_PASSWORD")  
 
-
-
-def login_to_instagram():
+def login(driver):
     
-    driver = webdriver.Chrome(executable_path='C:/Users/Almas/Desktop/chromedriver-win64/chromedriver.exe')
     driver.get("https://www.instagram.com/accounts/login/")
-    
-    username = "sina_afkhamiii"
-    password = "Sina79afkhami@"
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "username"))).send_keys(username)
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.NAME, "password"))).send_keys(password)
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']"))).click()
-    
     time.sleep(3)  
-    return driver
+
+    
+    username_input = driver.find_element(By.NAME, "username")  
+    password_input = driver.find_element(By.NAME, "password")  
+    
+    
+    username_input.send_keys(username)  
+    password_input.send_keys(password)  
+    
+    
+    login_button = driver.find_element(By.XPATH, "//button[@type='submit']")  
+    login_button.click()
+    
+    
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//nav")))  
 
 def collect_comments(driver, post_url):
+    
     driver.get(post_url)
-    time.sleep(2)
     
-    comments = []
-    while True:
-        try:
-            load_more_button = WebDriverWait(driver, 5).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Load more comments')]"))
-            )
-            load_more_button.click()
-            time.sleep(1)
-        except:
-            break
-    
-    comment_elements = driver.find_elements(By.XPATH, "//span[@class='comment_text_class']")
-    for comment in comment_elements:
-        comments.append(comment.text)
-    
-    
-    mention_counts = {}
-    for comment in comments:
-        mentions = re.findall(r"@\w+", comment)
-        for mention in mentions:
-            mention_counts[mention] = mention_counts.get(mention, 0) + 1
 
-    return comments, mention_counts
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//ul[contains(@class, 'Mr508')]")))  
+    
+    comments = []  
+    comment_elements = driver.find_elements(By.XPATH, "//span[@class='comment_text_class']")  
+    for element in comment_elements:
+        comments.append(element.text)  
+    
+    return comments  
 
 def collect_likes(driver, post_url):
+    
     driver.get(post_url)
-    time.sleep(2)
+    
+    
+    likes_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, 'likes')]")))
+    likes_button.click()  
+    
+    time.sleep(3) 
+    
+    likes = []  
+    like_elements = driver.find_elements(By.XPATH, "//a[contains(@href, '/')]//div[@class='e1e1d']//span")  
+    for element in like_elements:
+        likes.append(element.text)  
+    
+    return likes  
 
-    users_liked = []
+def collect_followers(driver, username):
+    
+    driver.get(f"https://www.instagram.com/{username}/") 
     
     
-    last_height = driver.execute_script("return document.body.scrollHeight")
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
-        
-        new_height = driver.execute_script("return document.body.scrollHeight")
-        if new_height == last_height:
-            break
-        last_height = new_height
+    followers_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//a[contains(@href, '/followers/')]")))
+    followers_button.click()  
     
+    time.sleep(3)  
     
-    like_elements = driver.find_elements(By.XPATH, "//a[@class='user_link_class']")
-    for user in like_elements:
-        users_liked.append(user.text)
-        
-    return users_liked
+    followers = []  
+    follower_elements = driver.find_elements(By.XPATH, "//a[contains(@href, '/')]//div[@class='e1e1d']//span")  # پیدا کردن کاربران فالوور
+    for element in follower_elements:
+        followers.append(element.text)  
+    
+    return followers  
 
-def collect_followers(driver, profile_url):
-    driver.get(profile_url)
-    time.sleep(2)
-    
-    followers = []
-    
-    
-    followers_link = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, "followers"))
-    )
-    followers_link.click()
-    time.sleep(2)
-    
-    
-    followers_popup = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "//div[@class='isgrP']"))
-    )
-    
-    last_height = driver.execute_script("return arguments[0].scrollHeight", followers_popup)
-    while True:
-        driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", followers_popup)
-        time.sleep(2)
-        
-        new_height = driver.execute_script("return arguments[0].scrollHeight", followers_popup)
-        if new_height == last_height:
-            break
-        last_height = new_height
 
-    
-    follower_elements = driver.find_elements(By.XPATH, "//a[@class='user_link_class']")
-    for follower in follower_elements:
-        followers.append(follower.text)
+def calculate_scores(comments):
+    scores = {}  
+    for comment in comments:
         
-    return followers
+        mentioned_users = comment.split()  
+        for user in mentioned_users:
+            if user in scores:
+                scores[user] += 1  
+            else:
+                scores[user] = 1  
+    return scores  
