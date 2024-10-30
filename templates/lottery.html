@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2 class="text-center">تنظیم قرعه‌کشی</h2>
+<form method="POST" action="{{ url_for('lottery') }}">
+    <div class="form-group">
+        <label for="post_url">آدرس پست اینستاگرام:</label>
+        <input type="url" class="form-control" id="post_url" name="post_url" required>
+    </div>
+    <div class="form-group">
+        <label for="min_comments">حداقل تعداد نظرات:</label>
+        <input type="number" class="form-control" id="min_comments" name="min_comments" required>
+    </div>
+    <div class="form-group">
+        <label for="min_likes">حداقل تعداد لایک‌ها:</label>
+        <input type="number" class="form-control" id="min_likes" name="min_likes" required>
+    </div>
+    <button type="submit" class="btn btn-primary">تنظیم قرعه‌کشی</button>
+
+{% endblock content %}
