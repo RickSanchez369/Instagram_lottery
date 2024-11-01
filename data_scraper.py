@@ -27,21 +27,36 @@ def login(driver):
     login_button.click()
     
     
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//nav")))  
-
 def collect_comments(driver, post_url):
-    
     driver.get(post_url)
-    
 
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//ul[contains(@class, 'Mr508')]")))  
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//ul[contains(@class, 'Mr508')]")))
+
+    user_data = {}  
+    comment_elements = driver.find_elements(By.XPATH, "//span[@class='comment_text_class']")
     
-    comments = []  
-    comment_elements = driver.find_elements(By.XPATH, "//span[@class='comment_text_class']")  
     for element in comment_elements:
-        comments.append(element.text)  
-    
-    return comments  
+        comment_text = element.text
+        username = element.find_element(By.XPATH, ".//preceding-sibling::span[@class='username_class']").text  
+        
+        
+        if username not in user_data:
+            user_data[username] = {
+                'comment_count': 0,  
+                'mention_count': 0  
+            }
+
+        
+        user_data[username]['comment_count'] += 1
+        
+        
+        mentions = [word[1:] for word in comment_text.split() if word.startswith('@')]  
+        
+
+        user_data[username]['mention_count'] += int(len(mentions) // 5) 
+
+    return user_data 
+
 
 def collect_likes(driver, post_url):
     
@@ -78,14 +93,4 @@ def collect_followers(driver, username):
     return followers  
 
 
-def calculate_scores(comments):
-    scores = {}  
-    for comment in comments:
-        
-        mentioned_users = comment.split()  
-        for user in mentioned_users:
-            if user in scores:
-                scores[user] += 1  
-            else:
-                scores[user] = 1  
-    return scores  
+

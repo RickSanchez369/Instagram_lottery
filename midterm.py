@@ -6,6 +6,7 @@ from selenium import webdriver
 from forms import RegistrationForm, LoginForm, LotteryChoiceForm
 from data_scraper import login, collect_comments, collect_likes, collect_followers , calculate_scores
 from payment import process_payment
+import random
 
 
 # creat app
@@ -51,7 +52,7 @@ def login():
         user = Users.query.filter_by(email=form.email.data).first()
         if user and check_password_hash(user.password, form.password.data):
             flash('ورود موفقیت‌آمیز بود!', 'success')
-            return redirect(url_for('choose_lottery'))
+            return redirect(url_for('lottery'))
         else:
             flash('ورود ناموفق. لطفاً ایمیل و پسورد را بررسی کنید', 'danger')
     return render_template('login.html', form=form)
@@ -71,27 +72,32 @@ def choose_lottery():
             db.session.rollback()
             flash('خطایی در انتخاب نوع قرعه کشی رخ داد.', 'danger')
         flash(f'شما {chosen_type} را انتخاب کرده‌اید.', 'success')
-        return redirect(url_for('lottery'))
+        return redirect(url_for('lottery',lottery_type=lotterytype))
     return render_template('choose_lottery.html', form=form)
+ 
+ 
+@app.route('/start_lottery/<lottery_type>')
+def start_lottery(lottery_type):
+    if lottery_type == 'comments':
+        return lottery_by_comments()
+    elif lottery_type == 'likes':
+        return lottery_by_likes()
+    elif lottery_type == 'mentions':
+        return lottery_by_mentions()
+    elif lottery_type == 'followers':
+        return lottery_by_followers()
+    else:
+        flash('Invalid lottery type selected!')
+        return redirect(url_for('lottery'))
 
-@app.route('/lottery', methods=['GET', 'POST'])
-def lottery():
-    if request.method == 'POST':
-        post_url = request.form['post_url']
-        min_comments = int(request.form['min_comments'])
-        min_likes = int(request.form['min_likes'])
+def lottery_by_likes():
+    likes = collect_likes()
 
-        driver = webdriver.Chrome(executable_path='C:\\Users\\Almas\\Desktop\\chromedriver-win64\\chromedriver.exe')
-    
-        driver = login()
-        
-        comments = collect_comments(driver, post_url)
-        likes = collect_likes(driver, post_url)
-        followers = collect_followers(driver, post_url)
-        score = calculate_scores(driver,post_url)
+def lottery_by_comments():
+    pass
 
 
-    return render_template('lottery.html')
+
 
 
 
