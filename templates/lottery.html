@@ -2,15 +2,16 @@
 
 {% block content %}
 
-<form method="POST" action="{{ url_for('set_filters') }}">
-    <label for="min_comments">حداقل تعداد کامنت‌ها:</label>
-    <input type="number" id="min_comments" name="min_comments" required>
-
-    <label for="min_mentions">حداقل تعداد منشن‌ها:</label>
-    <input type="number" id="min_mentions" name="min_mentions" required>
-
-    <input type="submit" value="تنظیم فیلترها">
-</form>
-س
+<h2 class="text-center">تنظیم قرعه‌کشی</h2>
+<form method="POST" action="{{ url_for('lottery') }}">
+    <div class="form-group">
+        <label for="post_url">آدرس پست اینستاگرام:</label>
+        <input type="url" class="form-control" id="post_url" name="post_url" required>
+    </div>
+    <div class="form-group">
+        <label for="min_mentions">حداقل تعداد منشنها :</label>
+        <input type="number" class="form-control" id="min_mentions" name="min_mentions" required>
+    </div>
+    <button type="submit" class="btn btn-primary">تنظیم قرعه‌کشی</button>
 
 {% endblock content %}
