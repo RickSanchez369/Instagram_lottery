@@ -6,8 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-username = os.getenv("INSTAGRAM_USERNAME")  
-password = os.getenv("INSTAGRAM_PASSWORD")  
+username = os.getenv("sina_afkhamiii")  
+password = os.getenv("Sina79afkhami@")  
 
 def login(driver):
     

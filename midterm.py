@@ -1,12 +1,13 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
 from models import db, bcrypt, Users , LotteryType 
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash , generate_password_hash
 import os
 from selenium import webdriver
 from forms import RegistrationForm, LoginForm, LotteryChoiceForm
 from data_scraper import login, collect_comments, collect_likes, collect_followers 
 from payment import process_payment
 import random
+from selenium.webdriver.chrome.service import Service
 
 
 # creat app
@@ -33,8 +34,8 @@ def index():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user = Users(username=form.username.data, email=form.email.data, password=hashed_password)
+        password = form.password.data
+        user = Users(username=form.username.data, email=form.email.data, password=password)
         try:
             db.session.add(user)
             db.session.commit()
@@ -50,9 +51,9 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
-        if user and check_password_hash(user.password, form.password.data):
+        if user and user.password == form.password.data:
             flash('ورود موفقیت‌آمیز بود!', 'success')
-            return redirect(url_for('lottery'))
+            return redirect(url_for('choose_lottery'))
         else:
             flash('ورود ناموفق. لطفاً ایمیل و پسورد را بررسی کنید', 'danger')
     return render_template('login.html', form=form)
@@ -76,13 +77,13 @@ def choose_lottery():
     return render_template('choose_lottery.html', form=form)
 
  
-@app.route('/start_lottery/<lottery_type>' , method=['GET','POST'])
+@app.route('/start_lottery/<lottery_type>' , methods=['GET','POST'])
 def start_lottery(lottery_type):
     if request.method == 'POST':
         post_url = request.form['post_url']
-        min_mentions = int(request.form['min_comments'])
         
-        driver = webdriver.Chrome(executable_path='C:\\Users\\Almas\\Desktop\\chromedriver-win64\\chromedriver.exe')
+        service = Service('C:\\chromedriver-win64\\chromedriver.exe')
+        driver = webdriver.Chrome(service=service)
         login(driver)
         
         if lottery_type == 'comments':
@@ -95,14 +96,14 @@ def start_lottery(lottery_type):
             followers = collect_followers(driver, post_url)
             winner=random.choice(followers)
         elif lottery_type == 'score':
-            scores =collect_comments(driver,post_url, min_mentions)
+            scores =collect_comments(driver,post_url, )
         else:
             flash('Invalid lottery type selected!')
             return redirect(url_for('start_lottery'))
         
         return redirect(url_for('lottery_result', winner=winner))
    
-    return render_template('lottery.html')
+    return render_template('lottery.html', lottery_type=lottery_type)
 
 
 @app.route('/lottery_result')

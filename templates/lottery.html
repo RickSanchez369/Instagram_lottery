@@ -3,14 +3,10 @@
 {% block content %}
 
 <h2 class="text-center">تنظیم قرعه‌کشی</h2>
-<form method="POST" action="{{ url_for('lottery') }}">
+<form method="POST" action="{{ url_for('start_lottery', lottery_type='lottery_type') }}">
     <div class="form-group">
         <label for="post_url">آدرس پست اینستاگرام:</label>
         <input type="url" class="form-control" id="post_url" name="post_url" required>
-    </div>
-    <div class="form-group">
-        <label for="min_mentions">حداقل تعداد منشنها :</label>
-        <input type="number" class="form-control" id="min_mentions" name="min_mentions" required>
     </div>
     <button type="submit" class="btn btn-primary">تنظیم قرعه‌کشی</button>
 
