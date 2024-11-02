@@ -74,21 +74,31 @@ def choose_lottery():
         flash(f'شما {chosen_type} را انتخاب کرده‌اید.', 'success')
         return redirect(url_for('lottery',lottery_type=lotterytype))
     return render_template('choose_lottery.html', form=form)
+
  
- 
-@app.route('/start_lottery/<lottery_type>')
+@app.route('/start_lottery/<lottery_type>' , method=['GET','POST'])
 def start_lottery(lottery_type):
-    if lottery_type == 'comments':
-        return lottery_by_comments()
-    elif lottery_type == 'likes':
-        return lottery_by_likes()
-    elif lottery_type == 'mentions':
-        return lottery_by_mentions()
-    elif lottery_type == 'followers':
-        return lottery_by_followers()
-    else:
-        flash('Invalid lottery type selected!')
-        return redirect(url_for('lottery'))
+    if request.method == 'POST':
+        post_url = request.form['post_url']
+        min_mentions = int(request.form['min_comments'])
+        
+        driver = webdriver.Chrome(executable_path='C:\\Users\\Almas\\Desktop\\chromedriver-win64\\chromedriver.exe')
+        login(driver)
+        
+        if lottery_type == 'comments':
+            comments = collect_comments(driver,post_url)
+        elif lottery_type == 'likes':
+            likes =collect_likes(driver,post_url)
+        elif lottery_type == 'score':
+            scores =collect_comments(driver,post_url, min_mentions)
+        elif lottery_type == 'followers':
+            followers = collect_followers(driver, post_url)
+        else:
+            flash('Invalid lottery type selected!')
+            return redirect(url_for('start_lottery'))
+    
+    return render_template('lottery.html')
+
 
 def lottery_by_likes():
     likes = collect_likes()

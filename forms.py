@@ -19,7 +19,7 @@ class LotteryChoiceForm(FlaskForm):
     lottery_type = SelectField('Select Lottery Type', choices=[
         ('comments', 'Lottery by Comments'),
         ('likes', 'Lottery by Likes'),
-        ('mentions', 'Lottery by Mentions'),
+        ('score', 'Lottery by score'),
         ('followers', 'Lottery by Followers')
     ])
     submit = SubmitField('Proceed')
