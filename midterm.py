@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 import os
 from selenium import webdriver
 from forms import RegistrationForm, LoginForm, LotteryChoiceForm
-from data_scraper import login, collect_comments, collect_likes, collect_followers , calculate_scores
+from data_scraper import login, collect_comments, collect_likes, collect_followers 
 from payment import process_payment
 import random
 
@@ -72,7 +72,7 @@ def choose_lottery():
             db.session.rollback()
             flash('خطایی در انتخاب نوع قرعه کشی رخ داد.', 'danger')
         flash(f'شما {chosen_type} را انتخاب کرده‌اید.', 'success')
-        return redirect(url_for('lottery',lottery_type=lotterytype))
+        return redirect(url_for('start_lottery',lottery_type=lotterytype))
     return render_template('choose_lottery.html', form=form)
 
  
@@ -87,24 +87,27 @@ def start_lottery(lottery_type):
         
         if lottery_type == 'comments':
             comments = collect_comments(driver,post_url)
+            winner = random.choice(comments)
         elif lottery_type == 'likes':
             likes =collect_likes(driver,post_url)
-        elif lottery_type == 'score':
-            scores =collect_comments(driver,post_url, min_mentions)
+            winner = random.choice(likes)
         elif lottery_type == 'followers':
             followers = collect_followers(driver, post_url)
+            winner=random.choice(followers)
+        elif lottery_type == 'score':
+            scores =collect_comments(driver,post_url, min_mentions)
         else:
             flash('Invalid lottery type selected!')
             return redirect(url_for('start_lottery'))
-    
+        
+        return redirect(url_for('lottery_result', winner=winner))
+   
     return render_template('lottery.html')
 
 
-def lottery_by_likes():
-    likes = collect_likes()
-
-def lottery_by_comments():
-    pass
+@app.route('/lottery_result')
+def lottery_result(winner):
+    return render_template('lottery_result.html' ,winner)
 
 
 
