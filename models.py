@@ -20,11 +20,3 @@ class LotteryType(db.Model):
     name = db.Column(db.String(50), nullable=False)
     
     
-class LotteryEntry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    post_id = db.Column(db.String(200))
-    comments = db.Column(db.Integer)
-    mentions = db.Column(db.Integer)
-    likes = db.Column(db.Integer)
-    followers = db.Column(db.Integer)

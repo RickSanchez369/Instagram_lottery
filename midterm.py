@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
-from models import db, bcrypt, Users , LotteryType , LotteryEntry
+from models import db, bcrypt, Users , LotteryType 
 from werkzeug.security import check_password_hash
 import os
 from selenium import webdriver
